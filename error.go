@@ -1,8 +1,7 @@
-// Package aselerror 这是一个自定义的 error 包
 package aselerror
 
 import (
-	"strconv"
+	"fmt"
 )
 
 type AselError struct {
@@ -13,65 +12,66 @@ type AselError struct {
 	// level Degree of disaster
 	level int8
 
-	// output Are details exported when calling Error()? Some information can't be returned directly to the front-end via the interface
-	output bool
+	// private Are details exported when calling Error()? Some information can't be returned directly to the front-end via the interface
+	private bool
 }
 
-func New(cause string) *AselError {
-	return &AselError{cause: cause}
+type AselOption func(*AselError)
+
+func WithCode(code uint32) AselOption {
+	return func(c *AselError) {
+		c.code = code
+	}
 }
 
-func NewCauseAndCode(cause string, code uint32) *AselError {
-	return &AselError{cause: cause, code: code}
+func WithError(err error) AselOption {
+	return func(c *AselError) {
+		c.err = err
+	}
 }
 
-func (e *AselError) Wrap(err error) *AselError {
-	e.err = err
-	return e
+func WithLevel(level int8) AselOption {
+	return func(c *AselError) {
+		c.level = level
+	}
+}
+
+func WithOutput(level int8) AselOption {
+	return func(c *AselError) {
+		c.level = level
+	}
+}
+
+func New(cause string, opts ...AselOption) *AselError {
+	err := &AselError{cause: cause}
+
+	for _, opt := range opts {
+		opt(err)
+	}
+
+	return err
 }
 
 func (e *AselError) GetCode() uint32 {
 	return e.code
 }
 
-func (e *AselError) UpdateCause(cause string) *AselError {
-	e.cause = cause
-	return e
-}
-
-// Update Escalation of disaster level
-func (e *AselError) Update(level int8) *AselError {
-	e.level = level
-	return e
-}
-
-func (e *AselError) Unwarp() error {
-	return e.err
-}
-
 // HideDetails Automatically calling the Error() method outputs a code status code instead of a string or error, which hides the internal error message description.
 func (e *AselError) HideDetails() *AselError {
-	e.output = true
+	e.private = true
 	return e
 }
 
 // ShowDetails deactivate sensitive status
 func (e *AselError) ShowDetails() *AselError {
-	e.output = false
+	e.private = false
 	return e
 }
 
 func (e *AselError) Error() string {
-	switch {
-	case e.output:
-		return strconv.Itoa(int(e.code))
-	case e.cause != "" && e.err != nil:
-		return e.cause + ": " + e.err.Error()
-	case e.cause != "":
-		return e.cause
-	case e.err != nil:
-		return e.err.Error()
-	default:
-		return "Unknown error"
+	if e.private {
+		return fmt.Sprintf("aselerror unknow! code: %d", e.code)
+	} else {
+		return fmt.Sprintf("aselerror cause: %s, detail: %s", e.cause, e.err.Error())
 	}
 }
