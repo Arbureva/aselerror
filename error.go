@@ -69,9 +69,12 @@ func (e *AselError) ShowDetails() *AselError {
 }
 
 func (e *AselError) Error() string {
-	if e.private {
+	switch {
+	case e.private:
 		return fmt.Sprintf("aselerror unknow! code: %d", e.code)
-	} else {
+	case e.err != nil:
 		return fmt.Sprintf("aselerror cause: %s, detail: %s", e.cause, e.err.Error())
+	default:
+		return fmt.Sprintf("aselerror cause: %s, detail: <nil>", e.cause)
 	}
 }
