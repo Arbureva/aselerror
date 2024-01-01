@@ -60,6 +60,10 @@ func (e *AselError) GetLevel() int8 {
 	return e.level
 }
 
+func (e *AselError) GetCause() string {
+	return e.cause
+}
+
 // HideDetails Automatically calling the Error() method outputs a code status code instead of a string or error, which hides the internal error message description.
 func (e *AselError) HideDetails() *AselError {
 	e.private = true
