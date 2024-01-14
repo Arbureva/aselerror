@@ -4,85 +4,89 @@ import (
 	"fmt"
 )
 
-type AselError struct {
-	cause string
-	code  uint32
-	err   error
+type AselError interface {
+	GetCode() int
+	GetLevel() int8
+	GetMessage() string
+	Error() string
+}
+
+type aerr struct {
+	cause error
+	code  int
+	msg   string
 
 	// level Degree of disaster
 	level int8
-
-	// private Are details exported when calling Error()? Some information can't be returned directly to the front-end via the interface
-	private bool
 }
 
-type AselOption func(*AselError)
+type AselOption func(*aerr)
 
-func WithCode(code uint32) AselOption {
-	return func(c *AselError) {
+func WithCode(code int) AselOption {
+	return func(c *aerr) {
 		c.code = code
 	}
 }
 
-func WithError(err error) AselOption {
-	return func(c *AselError) {
-		c.err = err
+func WithCause(err error) AselOption {
+	return func(c *aerr) {
+		c.cause = err
 	}
 }
 
 func WithLevel(level int8) AselOption {
-	return func(c *AselError) {
+	return func(c *aerr) {
 		c.level = level
 	}
 }
 
-func WithOutput(level int8) AselOption {
-	return func(c *AselError) {
-		c.level = level
-	}
-}
+func New(message string, opts ...AselOption) AselError {
+	var err aerr
 
-func New(cause string, opts ...AselOption) *AselError {
-	err := &AselError{cause: cause}
+	if len(message) != 0 {
+		err.msg = message
+	} else {
+		err.msg = "unknow error"
+	}
 
 	for _, opt := range opts {
-		opt(err)
+		opt(&err)
 	}
 
 	return err
 }
 
-func (e *AselError) GetCode() uint32 {
+func Wrap(err error, message string) AselError {
+	if err == nil {
+		return nil
+	}
+
+	return aerr{
+		cause: err,
+		msg:   message,
+	}
+}
+
+func (e aerr) GetCode() int {
 	return e.code
 }
 
-func (e *AselError) GetLevel() int8 {
+func (e aerr) GetLevel() int8 {
 	return e.level
 }
 
-func (e *AselError) GetCause() string {
+func (e aerr) GetMessage() string {
+	return e.msg
+}
+
+func (e aerr) Unwrap() error {
 	return e.cause
 }
 
-// HideDetails Automatically calling the Error() method outputs a code status code instead of a string or error, which hides the internal error message description.
-func (e *AselError) HideDetails() *AselError {
-	e.private = true
-	return e
-}
-
-// ShowDetails deactivate sensitive status
-func (e *AselError) ShowDetails() *AselError {
-	e.private = false
-	return e
-}
-
-func (e *AselError) Error() string {
-	switch {
-	case e.private:
-		return fmt.Sprintf("aselerror unknow! code: %d", e.code)
-	case e.err != nil:
-		return fmt.Sprintf("aselerror cause: %s, detail: %s", e.cause, e.err.Error())
-	default:
-		return fmt.Sprintf("aselerror cause: %s, detail: <nil>", e.cause)
+func (e aerr) Error() string {
+	if e.cause != nil {
+		return fmt.Sprintf("aselerror cause: %s, message: %s, level: %d", e.cause, e.msg, e.level)
+	} else {
+		return fmt.Sprintf("aselerror cause: <nil>, message: %s, level: %d", e.msg, e.level)
 	}
 }
