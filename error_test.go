@@ -6,36 +6,39 @@ import (
 )
 
 var (
-	ErrorValidate = &AselError{
-		cause: "Parameter verification failed",
-		code:  100401,
-		err:   nil,
-		level: 1,
-	}
+	TestError = New(
+		"parameter verification failed",
+		WithCode(100401),
+		WithLevel(1),
+	)
 )
 
 func TestNew(t *testing.T) {
-	err := ErrorValidate
+	t.Logf("test err { Error() string } method: %s", TestError)
 
-	fmt.Printf("error: %s\n", err)
+	result := func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = New(
+					"panic error",
+					WithCode(100401),
+					WithLevel(8),
+					WithCause(fmt.Errorf("%v", r)),
+				)
+			}
+		}()
 
-	fmt.Printf("hide error cause: %s\n", err.HideDetails())
+		panic("test panice error")
+	}
 
-	var testError error
-
-	testError = err
-
-	fmt.Printf("test another err: %s\n", testError)
-
-	err.ShowDetails()
-
-	fmt.Printf("test another err show: %s\n", testError)
-
-	// === RUN   TestNew
-	// error: Parameter verification failed
-	// hide error cause: 100401
-	// test another err: 100401
-	// test another err show: Parameter verification failed
-	// --- PASS: TestNew (0.00s)
-	// PASS
+	err := result()
+	if e, ok := err.(AselError); ok {
+		if e.GetLevel() > 3 {
+			t.Logf("warning: %s", e)
+		} else {
+			t.Logf("normal: %s", e)
+		}
+	} else {
+		t.Errorf("unexpected mistakes")
+	}
 }
