@@ -15,7 +15,7 @@
 ## 安装
 
 ```
-go get github.com/asel-go/aselerror
+go get github.com/Locter9001/aselerror
 ```
 
 ## 使用
