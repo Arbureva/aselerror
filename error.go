@@ -75,6 +75,12 @@ func (e aerr) GetLevel() int8 {
 	return e.level
 }
 
+// SetMessage is like update message
+func (e aerr) SetMessage(msg string) AselError {
+	e.msg = msg
+	return e
+}
+
 func (e aerr) GetMessage() string {
 	return e.msg
 }
