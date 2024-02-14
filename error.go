@@ -9,6 +9,7 @@ type AselError interface {
 	GetLevel() int8
 	GetMessage() string
 	Error() string
+	SetMessage(msg string) AselError
 }
 
 type aerr struct {
