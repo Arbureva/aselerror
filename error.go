@@ -10,6 +10,7 @@ type AselError interface {
 	GetMessage() string
 	Error() string
 	SetMessage(msg string) AselError
+	SetCause(err error) AselError
 }
 
 type aerr struct {
@@ -74,6 +75,11 @@ func (e aerr) GetCode() int {
 
 func (e aerr) GetLevel() int8 {
 	return e.level
+}
+
+func (e aerr) SetCause(err error) AselError {
+	e.cause = err
+	return e
 }
 
 // SetMessage is like update message
