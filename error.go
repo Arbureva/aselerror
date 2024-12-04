@@ -88,6 +88,12 @@ func (e aerr) SetMessage(msg string) AselError {
 	return e
 }
 
+// SetFMessage is like update message, with format string
+func (e aerr) SetFMessage(format string, args ...interface{}) AselError {
+	e.msg = fmt.Sprintf(format, args...)
+	return e
+}
+
 func (e aerr) GetMessage() string {
 	return e.msg
 }

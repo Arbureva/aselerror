@@ -1,6 +1,6 @@
 # aselerror
 
-this is a package designed for handling errors related to 'Exceptional API Response'.
+this is a package designed for handling errors related to 'Exceptional API Response.'
 
 in traditional response handling, it's common to determine whether an error contains
 sensitive information before deciding to return it to the front end. Frequent use of
