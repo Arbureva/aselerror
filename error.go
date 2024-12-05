@@ -10,6 +10,7 @@ type AselError interface {
 	GetMessage() string
 	Error() string
 	SetMessage(msg string) AselError
+	SetFMessage(format string, a ...interface{}) AselError
 	SetCause(err error) AselError
 }
 
